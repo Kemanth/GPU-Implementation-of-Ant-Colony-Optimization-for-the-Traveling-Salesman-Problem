@@ -5,6 +5,9 @@
 
 #define MAX_CITIES 50
 #define MAX_ANTS 50
+#define ALPHA 1.0
+#define BETA 5.0 
+#define RHO 0.5 
 
 using namespace std;
 
@@ -59,6 +62,64 @@ void initialize(cities city[],int n)
 	}
 }
 
+double fitness(int i, int j)
+{
+	return(( pow( pheromone[i][j], ALPHA) * pow( (1.0/ dist[i][j]), BETA)));
+}
+
+int selectNextCity(int k,int n)
+{
+	int i = ant[k].curCity;
+	double prod=0.0;
+	for(int j=0;j<n;j++)
+	{
+		if(ant[k].visited[j]==0)
+		{
+			prod+= fitness(i,j);
+		}
+	}
+	double maxp=-99999;
+	int nextcity=0;
+	for(int j=0;j<n;j++)
+	{
+		if(ant[k].visited[j]==0)
+		{
+			double p = fitness(i,j)/prod;
+			if(p>maxp)
+			{
+				maxp=p;
+				nextcity=j;
+			}
+		}
+	}
+	
+	return nextcity;
+}
+
+int tourConstruction(cities city[],int n)
+{
+	int movement=0;
+	
+	for(int i=0;i<MAX_ANTS;i++)
+	{
+		if(ant[i].pathIndex < n)
+		{
+			ant[i].nextCity = selectNextCity(i,n);
+			ant[i].visited[ant[i].nextCity]=1;
+			ant[i].path[ant[i].pathIndex]=ant[i].nextCity;
+			ant[i].pathIndex++;
+			ant[i].tourLength+=dist[ant[i].curCity][ant[i].nextCity];
+			
+			if(ant[i].pathIndex == n)
+			{
+				ant[i].tourLength+=dist[n-1][ant[i].path[0]];
+			}
+			ant[i].curCity = ant[i].nextCity;
+			movement++;
+		}
+	}
+}
+
 int main()
 {
 	ifstream in;
@@ -74,7 +135,7 @@ int main()
 	}
 	//initialize the ants and place them on the TSP cities 
 	initialize(city,ncities);
-	
+	tourConstruction(city,ncities);
 	return 0;
 }
 
