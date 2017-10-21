@@ -3,9 +3,9 @@
 #include<math.h>
 #include<stdlib.h>
 
-#define MAX_CITIES 50
+#define MAX_CITIES 30
 #define MAX_TIME 600
-#define MAX_ANTS 50
+#define MAX_ANTS 30
 #define ALPHA 1.0
 #define BETA 5.0 
 #define RHO 0.5 
@@ -123,6 +123,7 @@ int tourConstruction()
 			movement++;
 		}
 	}
+	return movement;
 }
 
 int updatePheromones()
@@ -142,24 +143,24 @@ int updatePheromones()
 			}
 		}
 	}
-	int x,y;
+	int a,b;
 	for(int i=0;i<MAX_ANTS;i++)
 	{
 		for(int j=0;j<n;j++)
 		{
 			if(j==n-1)
 			{
-				x=ant[i].path[j];
-				y=ant[i].path[j+1];
+				a=ant[i].path[j];
+				b=ant[i].path[j+1];
 			}
 			else
 			{
-				x=ant[i].path[j];
-				y=ant[i].path[0];
+				a=ant[i].path[j];
+				b=ant[i].path[0];
 			}
 			
-			pheromone[x][y]+=(1.0)/ant[i].tourLength;
-			pheromone[y][x]+=pheromone[x][y];
+			pheromone[a][b]+=(1.0)/ant[i].tourLength;
+			pheromone[b][a]+=pheromone[a][b];
 		}
 	}
 }
@@ -173,6 +174,7 @@ void reDeployAnts()
 		{
 			best = ant[i].tourLength;
 			bestIndex = i;
+			break;
 		}
 		if(i==n)
 			visit=0;
@@ -216,6 +218,12 @@ int main()
 			
 		}
 	}
+	cout<<endl;
+	for(int i=0;i<n;i++)
+	{
+		cout<<ant[bestIndex].path[i]<<" ";
+	}
+	cout<<endl;
 	cout<<"\nSACO: Best tour = "<<best<<endl<<endl<<endl;
 	return 0;
 }
