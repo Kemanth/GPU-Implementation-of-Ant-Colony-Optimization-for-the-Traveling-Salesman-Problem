@@ -4,6 +4,7 @@
 #include<stdlib.h>
 
 #define MAX_CITIES 50
+#define MAX_TIME 600
 #define MAX_ANTS 50
 #define ALPHA 1.0
 #define BETA 5.0 
@@ -23,11 +24,15 @@ struct ants{
 	double tourLength;
 };
 
+int n=0;
+cities city[MAX_CITIES];
 double pheromone[MAX_CITIES][MAX_CITIES];
 double dist[MAX_CITIES][MAX_CITIES];
 ants ant[MAX_ANTS];
+double best=(double)999999;
+int bestIndex;
 
-void initialize(cities city[],int n)
+void initialize()
 {
 	for(int i=0;i<n;i++)
 	{
@@ -96,7 +101,7 @@ int selectNextCity(int k,int n)
 	return nextcity;
 }
 
-int tourConstruction(cities city[],int n)
+int tourConstruction()
 {
 	int movement=0;
 	
@@ -120,22 +125,98 @@ int tourConstruction(cities city[],int n)
 	}
 }
 
+int updatePheromones()
+{
+	for(int i=0;i<n;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			if(i!=j)
+			{
+				pheromone[i][j] *=( 1.0 - RHO);
+				
+				if(pheromone[i][j]<0.0)
+				{
+					pheromone[i][j] = (1.0/n);
+				}
+			}
+		}
+	}
+	int x,y;
+	for(int i=0;i<MAX_ANTS;i++)
+	{
+		for(int j=0;j<n;j++)
+		{
+			if(j==n-1)
+			{
+				x=ant[i].path[j];
+				y=ant[i].path[j+1];
+			}
+			else
+			{
+				x=ant[i].path[j];
+				y=ant[i].path[0];
+			}
+			
+			pheromone[x][y]+=(1.0)/ant[i].tourLength;
+			pheromone[y][x]+=pheromone[x][y];
+		}
+	}
+}
+
+void reDeployAnts()
+{
+	int visit=0;
+	for(int i=0;i<MAX_ANTS;i++)
+	{
+		if(ant[i].tourLength < best)
+		{
+			best = ant[i].tourLength;
+			bestIndex = i;
+		}
+		if(i==n)
+			visit=0;
+		ant[i].curCity=visit++;
+		for(int j=0;j<n;j++)
+		{
+			ant[i].visited[j]=0;
+			ant[i].path[j]=-1;
+		}
+		ant[i].pathIndex = 1;
+		ant[i].path[0] = ant[i].curCity;
+		ant[i].nextCity = -1;
+		ant[i].tourLength = 0;
+		ant[i].visited[ant[i].curCity]=1;
+	}
+}
+
 int main()
 {
 	ifstream in;
-	int ncities;
 	in.open("cities.txt");
-	in>>ncities;
-	cities city[ncities];
-	cout<<ncities<<endl;
-	for(int i=0;i<ncities;i++)
+	in>>n;
+	cout<<n;
+	for(int i=0;i<n;i++)
 	{
 		in>>city[i].x;
 		in>>city[i].y;	
 	}
 	//initialize the ants and place them on the TSP cities 
-	initialize(city,ncities);
-	tourConstruction(city,ncities);
+	initialize();
+	for(int i=0;i<MAX_TIME;i++)
+	{
+		if( tourConstruction() == 0)
+		{
+			updatePheromones();
+			
+			if(i != MAX_TIME)
+				reDeployAnts();
+				
+			cout<<"\n Time is "<<i<<"("<<best<<")";
+			
+		}
+	}
+	cout<<"\nSACO: Best tour = "<<best<<endl<<endl<<endl;
 	return 0;
 }
 
