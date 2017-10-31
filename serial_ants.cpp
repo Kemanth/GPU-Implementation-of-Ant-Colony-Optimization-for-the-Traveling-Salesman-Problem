@@ -3,9 +3,10 @@
 #include<math.h>
 #include<stdlib.h>
 
-#define MAX_CITIES 30
-#define MAX_TIME 600
-#define MAX_ANTS 30
+#define MAX_CITIES 1002
+#define MAX_ANTS 1002
+#define MAX_TIME (20 * MAX_CITIES)
+#define QVAL 100
 #define ALPHA 1.0
 #define BETA 5.0 
 #define RHO 0.5 
@@ -33,7 +34,7 @@ double best=(double)999999;
 int bestIndex;
 
 void initialize()
-{
+{	
 	for(int i=0;i<n;i++)
 	{
 		for(int j=0;j<n;j++)
@@ -75,30 +76,35 @@ double fitness(int i, int j)
 int selectNextCity(int k,int n)
 {
 	int i = ant[k].curCity;
+	int j;
 	double prod=0.0;
-	for(int j=0;j<n;j++)
+	for(j=0;j<n;j++)
 	{
 		if(ant[k].visited[j]==0)
 		{
 			prod+= fitness(i,j);
 		}
 	}
-	double maxp=-99999;
-	int nextcity=0;
-	for(int j=0;j<n;j++)
+	
+	while(1)
 	{
-		if(ant[k].visited[j]==0)
+		j++;
+		
+		if(j >= MAX_CITIES)
+			j=0;
+		if(ant[k].visited[j] == 0)
 		{
 			double p = fitness(i,j)/prod;
-			if(p>maxp)
+			double x = ((double)rand()/RAND_MAX); 
+			
+			if(x < p)
 			{
-				maxp=p;
-				nextcity=j;
+				break;
 			}
 		}
 	}
 	
-	return nextcity;
+	return j;
 }
 
 int tourConstruction()
@@ -159,7 +165,7 @@ int updatePheromones()
 				b=ant[i].path[0];
 			}
 			
-			pheromone[a][b]+=(1.0)/ant[i].tourLength;
+			pheromone[a][b]+=(QVAL)/ant[i].tourLength;
 			pheromone[b][a]+=pheromone[a][b];
 		}
 	}
@@ -195,15 +201,17 @@ void reDeployAnts()
 int main()
 {
 	ifstream in;
-	in.open("cities.txt");
+	in.open("pr1002.tsp");
 	in>>n;
-	cout<<n;
+	cout<<n<<endl;
+	int num;
 	for(int i=0;i<n;i++)
 	{
+		in>>num;	
 		in>>city[i].x;
-		in>>city[i].y;	
+		in>>city[i].y;
+		cout<<city[i].x<<" "<<city[i].y<<" "<<endl;	
 	}
-	//initialize the ants and place them on the TSP cities 
 	initialize();
 	for(int i=0;i<MAX_TIME;i++)
 	{
