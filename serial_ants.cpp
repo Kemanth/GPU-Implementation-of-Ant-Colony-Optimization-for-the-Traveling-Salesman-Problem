@@ -3,8 +3,8 @@
 #include<math.h>
 #include<stdlib.h>
 
-#define MAX_CITIES 1002
-#define MAX_ANTS 1002
+#define MAX_CITIES 48
+#define MAX_ANTS 48
 #define MAX_TIME (20 * MAX_CITIES)
 #define QVAL 100
 #define ALPHA 1.0
@@ -122,8 +122,8 @@ int tourConstruction()
 			ant[i].tourLength+=dist[ant[i].curCity][ant[i].nextCity];
 			
 			if(ant[i].pathIndex == n)
-			{
-				ant[i].tourLength+=dist[n-1][ant[i].path[0]];
+			{//changed here
+				ant[i].tourLength+=dist[ant[i].path[n-1]][ant[i].path[0]];
 			}
 			ant[i].curCity = ant[i].nextCity;
 			movement++;
@@ -198,10 +198,12 @@ void reDeployAnts()
 	}
 }
 
-int main()
-{
+int main(int argc, char *argv[])
+{	if (argc > 1){
+		cout << "Reading File "<< argv[1]<<endl;
+	}
 	ifstream in;
-	in.open("pr1002.tsp");
+    	in.open(argv[1]);
 	in>>n;
 	cout<<n<<endl;
 	int num;
