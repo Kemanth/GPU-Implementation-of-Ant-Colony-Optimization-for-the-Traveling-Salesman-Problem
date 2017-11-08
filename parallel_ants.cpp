@@ -2,6 +2,7 @@
 #include <iostream>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+
 using namespace std;
 using namespace thrust;
 
@@ -56,9 +57,27 @@ __global__
 void initialize(float *d_dist, float *d_pheromone, ants *d_ant, cities *int n){
 	col = blockIdx.x * blockDim.x + threadIdx.x;
 	row = blockIdx.y * blockDim.y + threadIdx.y;
-
-	d_dist[col + row * n] = 0.0f;
-	d_pheromone[col + row * n] = 1.0 / n;
+	if((row<n)&&(col<n)){
+	
+		d_dist[col + row * n] = 0.0f;
+		d_pheromone[col + row * n] = 1.0 / n;
+		if(row!=col)
+		{
+			dist[col + row * n]=sqrt(pow(abs(city[row].x-city[col].x),2)+pow(abs(city[row].y-city[col].y),2));
+			dist[col + row * n]=dist[col + row * n];
+		}
+		visit=0;
+		if(i==n)
+			visit=0;
+		ant[i].curCity=visit++;
+		ant[i].visited[j]=0;
+		ant[i].path[j]=-1;
+		ant[i].pathIndex = 1;
+		ant[i].path[0] = ant[i].curCity;
+		ant[i].nextCity = -1;
+		ant[i].tourLength = 0;
+		ant[i].visited[ant[i].curCity]=1;
+	}
 }
 
 
