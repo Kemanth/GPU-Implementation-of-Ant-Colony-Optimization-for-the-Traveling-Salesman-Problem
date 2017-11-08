@@ -66,17 +66,16 @@ void initialize(float *d_dist, float *d_pheromone, ants *d_ant, cities *int n){
 			dist[col + row * n]=sqrt(pow(abs(city[row].x-city[col].x),2)+pow(abs(city[row].y-city[col].y),2));
 			dist[col + row * n]=dist[col + row * n];
 		}
-		visit=0;
-		if(i==n)
-			visit=0;
-		ant[i].curCity=visit++;
-		ant[i].visited[j]=0;
-		ant[i].path[j]=-1;
-		ant[i].pathIndex = 1;
-		ant[i].path[0] = ant[i].curCity;
-		ant[i].nextCity = -1;
-		ant[i].tourLength = 0;
-		ant[i].visited[ant[i].curCity]=1;
+		ant[row].visited[col]=0;
+		ant[row].path[col]=-1;
+		if(col==0){
+			ant[row].curCity=visit++;
+			ant[row].pathIndex = 1;
+			ant[row].path[0] = ant[row].curCity;
+			ant[row].nextCity = -1;
+			ant[row].tourLength = 0;
+			ant[row].visited[ant[row].curCity]=1;
+		}
 	}
 }
 
@@ -107,7 +106,7 @@ int main(int argc, char *argv[]){
 	dim3 gridDim((n - 1)/ 1024 + 1, (n - 1)/ 1024 + 1, 1 )
 	
 	initialize<<<gridDim, blockDim>>>(d_dist, d_pheromone, d_ant, d_city, n);
-	
+	/*
 	for ( int i = 0; i < MAX_TIME; i++){
 	
 		tourConstruction<<<1024, (n - 1)/ 1024 + 1>>>(d_ant, h_movement, n);
@@ -136,5 +135,6 @@ int main(int argc, char *argv[]){
 	}
 	cout<<endl;
 	cout<<"\nSACO: Best tour = "<<best<<endl<<endl<<endl;
+	*/
 	return 0;
 }
