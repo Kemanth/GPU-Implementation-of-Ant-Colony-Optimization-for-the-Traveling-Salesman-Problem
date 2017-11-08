@@ -3,15 +3,17 @@
 #include<math.h>
 #include<stdlib.h>
 
-#define MAX_CITIES 48
-#define MAX_ANTS 48
-#define MAX_TIME (20 * MAX_CITIES)
-#define QVAL 100
-#define ALPHA 1.0
-#define BETA 5.0 
-#define RHO 0.5 
-
 using namespace std;
+
+int MAX_CITIES;
+int MAX_ANTS;
+int MAX_TIME;
+int QVAL = 100;
+float  ALPHA = 1.0f;
+float BETA = 5.0f; 
+float RHO = 0.5f; 
+
+
 
 struct cities
 {
@@ -20,16 +22,16 @@ struct cities
 struct ants{
 	
 	int curCity, nextCity, pathIndex;
-	int visited[MAX_CITIES];
-	int path[MAX_CITIES];
+	int *visited;
+	int *path;
 	double tourLength;
 };
 
 int n=0;
-cities city[MAX_CITIES];
-double pheromone[MAX_CITIES][MAX_CITIES];
-double dist[MAX_CITIES][MAX_CITIES];
-ants ant[MAX_ANTS];
+cities *city;
+double **pheromone;
+double **dist;
+ants *ant;
 double best=(double)999999;
 int bestIndex;
 
@@ -110,6 +112,7 @@ int selectNextCity(int k,int n)
 int tourConstruction()
 {
 	int movement=0;
+    cout << "inside tour" <<endl;
 	
 	for(int i=0;i<MAX_ANTS;i++)
 	{
@@ -123,12 +126,13 @@ int tourConstruction()
 			
 			if(ant[i].pathIndex == n)
 			{//changed here
-				ant[i].tourLength+=dist[ant[i].path[n-1]][ant[i].path[0]];
+				ant[i].tourLength+=dist[n-1][ant[i].path[0]];
 			}
 			ant[i].curCity = ant[i].nextCity;
 			movement++;
 		}
 	}
+    cout << "movement "<<movement<<endl;
 	return movement;
 }
 
@@ -197,24 +201,48 @@ void reDeployAnts()
 		ant[i].visited[ant[i].curCity]=1;
 	}
 }
+void initConstants(){
+    MAX_ANTS = MAX_CITIES = n;
+    MAX_TIME = 20 * MAX_CITIES;
+    city = new cities[MAX_CITIES];
 
+    pheromone = new double*[MAX_CITIES];
+    for(int i = 0; i < MAX_CITIES; i++)
+            pheromone[i] = new double[MAX_CITIES];
+    
+    dist= new double*[MAX_CITIES];
+    for(int i = 0; i < MAX_CITIES; i++)
+            dist[i] = new double[MAX_CITIES];
+    
+    ant = new ants[MAX_ANTS];
+    for(int i = 0; i<MAX_ANTS; i++){
+            ant[i].visited = new int[MAX_ANTS];
+            ant[i].path = new int[MAX_ANTS];
+    }
+    
+}
 int main(int argc, char *argv[])
 {	if (argc > 1){
 		cout << "Reading File "<< argv[1]<<endl;
 	}
 	ifstream in;
-    	in.open(argv[1]);
+    in.open(argv[1]);
 	in>>n;
+    
+    //initialize constants
+
 	cout<<n<<endl;
 	int num;
-	for(int i=0;i<n;i++)
+	initConstants();
+    cout << "initialized" <<endl;
+    for(int i=0;i<n;i++)
 	{
 		in>>num;	
 		in>>city[i].x;
 		in>>city[i].y;
 		cout<<city[i].x<<" "<<city[i].y<<" "<<endl;	
 	}
-	initialize();
+    initialize(); 
 	for(int i=0;i<MAX_TIME;i++)
 	{
 		if( tourConstruction() == 0)
