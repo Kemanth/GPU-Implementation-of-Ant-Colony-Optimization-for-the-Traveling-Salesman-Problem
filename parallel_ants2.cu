@@ -35,7 +35,7 @@ float dist[MAX_CITIES][MAX_CITIES];
 ants ant[MAX_ANTS];
 float best=(double)999999;
 int bestIndex;
-/*incomplete initialize*/
+
 __global__ void initialize(float *dist, float *pheromone, ants *ant,cities *city,int n){
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -194,6 +194,10 @@ void reDeployAnts()
 int main(int argc, char *argv[])
 {	if (argc > 1){
 		cout << "Reading File "<< argv[1]<<endl;
+	}
+	else{
+		cout << "Usage:Progname inputFileName" << endl;
+		return 1;
 	}
 	ifstream in;
     	in.open(argv[1]);

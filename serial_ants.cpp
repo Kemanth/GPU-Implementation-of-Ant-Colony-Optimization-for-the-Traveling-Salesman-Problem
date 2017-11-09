@@ -201,6 +201,10 @@ int main(int argc, char *argv[])
 {	if (argc > 1){
 		cout << "Reading File "<< argv[1]<<endl;
 	}
+	else{
+		cout << "Usage:progname inputFileName" <<endl;
+		return 1;
+	}
 	ifstream in;
     	in.open(argv[1]);
 	in>>n;
