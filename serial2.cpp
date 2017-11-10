@@ -2,9 +2,9 @@
 #include<fstream>
 #include<math.h>
 #include<stdlib.h>
-
-#define MAX_CITIES 1002 
-#define MAX_ANTS 1002
+#include<time.h>
+#define MAX_CITIES 535 
+#define MAX_ANTS 4800
 #define Q 100
 #define ALPHA 1.0
 #define BETA 5.0 
@@ -17,7 +17,7 @@ int NC = 0;
 int t = 0;
 struct cities
 {
-	int x,y;
+	float x,y;
 };
 int s;
 struct ants{
@@ -46,13 +46,13 @@ void initialize()
 			Delta[i][j] = 0.0f;
 			if(i!=j)
 			{
-				dist[i][j]=sqrt(pow(abs(city[i].x-city[j].x),2)+pow(abs(city[i].y-city[j].y),2));
+				dist[i][j]=sqrt(pow(fabs(city[i].x-city[j].x),2)+pow(fabs(city[i].y-city[j].y),2));
 			}
 		}	
 	}
 }
 void initTour(){
-	cout << "inside init tour" << endl;
+	//cout << "inside init tour" << endl;
 	s = 0;
 	for(int k=0;k<MAX_ANTS;k++)
 	{
@@ -68,12 +68,12 @@ void initTour(){
 	}
 }
 double fitness(int i, int j)
-{	cout<<"ditness"<<endl;
+{	//cout<<"ditness"<<endl;
 	return(( pow( pheromone[i][j], ALPHA) * pow( (1.0/ dist[i][j]), BETA)));
 }
 
 int selectNextCity(int k,int n)
-{	cout<<"next city"<<endl;
+{	//cout<<"next city"<<endl;
 	int i = ant[k].curCity;
 	int j;
 	double prod=0.0;
@@ -107,7 +107,7 @@ int selectNextCity(int k,int n)
 }
 
 void tourConstruction()
-{	cout<<"tourConstruc"<<endl;
+{	//cout<<"tourConstruc"<<endl;
 	int j;
 	for(int s=1 ;s<n  ;s++)
 	{	
@@ -124,7 +124,7 @@ void tourConstruction()
 	}
 }
 void wrapUpTour(){
-	cout<<"wrapup"<<endl;
+	//cout<<"wrapup"<<endl;
 	for(int k = 0; k < MAX_ANTS;k++){
 		ant[k].L += dist[ant[k].curCity][ant[k].tabu[0]];
 		ant[k].curCity = ant[k].tabu[0];
@@ -141,7 +141,7 @@ void wrapUpTour(){
 	}
 }
 int updatePheromone(){
-	cout<<"update"<<endl;
+	//cout<<"update"<<endl;
 	for(int i =0;i<n;i++)
 	{
 		for(int j=0;j<n;j++)
@@ -163,7 +163,7 @@ int updatePheromone(){
 	NC += 1;
 }
 void emptyTabu(){
-	cout<<"emptytabu"<<endl;
+	//cout<<"emptytabu"<<endl;
 	for(int k = 0;k<MAX_ANTS;k++){
 		for(int i = 0; i < MAX_CITIES;i++){
 			ant[k].tabu[i] = 0;
@@ -195,7 +195,8 @@ int main(int argc, char *argv[])
 	initialize();
 	int MAX_TIME = 20;
 	for(;;)
-	{	initTour();
+	{   srand(time(NULL));
+        initTour();
 		tourConstruction();
 		wrapUpTour();
 		updatePheromone();
