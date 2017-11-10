@@ -202,23 +202,23 @@ void reDeployAnts()
 	}
 }
 void initConstants(){
-    MAX_ANTS = MAX_CITIES = n;
-    MAX_TIME = 20 * MAX_CITIES;
-    city = new cities[MAX_CITIES];
+	MAX_ANTS = MAX_CITIES = n;
+    	MAX_TIME = 20 * MAX_CITIES;
+    	city = new cities[MAX_CITIES];
 
-    pheromone = new double*[MAX_CITIES];
-    for(int i = 0; i < MAX_CITIES; i++)
-            pheromone[i] = new double[MAX_CITIES];
+    	pheromone = new double*[MAX_CITIES];
+    	for(int i = 0; i < MAX_CITIES; i++)
+            	pheromone[i] = new double[MAX_CITIES];
     
-    dist= new double*[MAX_CITIES];
-    for(int i = 0; i < MAX_CITIES; i++)
-            dist[i] = new double[MAX_CITIES];
+    	dist= new double*[MAX_CITIES];
+    	for(int i = 0; i < MAX_CITIES; i++)
+            	dist[i] = new double[MAX_CITIES];
     
-    ant = new ants[MAX_ANTS];
-    for(int i = 0; i<MAX_ANTS; i++){
-            ant[i].visited = new int[MAX_ANTS];
-            ant[i].path = new int[MAX_ANTS];
-    }
+    	ant = new ants[MAX_ANTS];
+    	for(int i = 0; i<MAX_ANTS; i++){
+        	ant[i].visited = new int[MAX_ANTS];
+            	ant[i].path = new int[MAX_ANTS];
+    	}
     
 }
 int main(int argc, char *argv[])
@@ -226,23 +226,23 @@ int main(int argc, char *argv[])
 		cout << "Reading File "<< argv[1]<<endl;
 	}
 	ifstream in;
-    in.open(argv[1]);
+    	in.open(argv[1]);
 	in>>n;
     
-    //initialize constants
+    	//initialize constants
 
 	cout<<n<<endl;
 	int num;
 	initConstants();
-    cout << "initialized" <<endl;
-    for(int i=0;i<n;i++)
+    	cout << "initialized" <<endl;
+    	for(int i=0;i<n;i++)
 	{
 		in>>num;	
 		in>>city[i].x;
 		in>>city[i].y;
 		cout<<city[i].x<<" "<<city[i].y<<" "<<endl;	
 	}
-    initialize(); 
+    	initialize(); 
 	for(int i=0;i<MAX_TIME;i++)
 	{
 		if( tourConstruction() == 0)

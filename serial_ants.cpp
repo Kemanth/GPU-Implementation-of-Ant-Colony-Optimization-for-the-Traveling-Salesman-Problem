@@ -1,6 +1,7 @@
 #include<iostream>
 #include<fstream>
 #include<math.h>
+#include<time.h>
 #include<stdlib.h>
 
 #define MAX_CITIES 5000
@@ -51,7 +52,7 @@ void initialize()
 	int visit=0;
 	for(int i=0;i<n;i++)
 	{
-		if(i==n)
+		if(visit==n)
 			visit=0;
 		ant[i].curCity=visit++;
 		for(int j=0;j<n;j++)
@@ -121,7 +122,7 @@ int tourConstruction()
 			ant[i].tourLength+=dist[ant[i].curCity][ant[i].nextCity];
 			
 			if(ant[i].pathIndex == n)
-			{//changed here
+			{
 				ant[i].tourLength+=dist[ant[i].path[n-1]][ant[i].path[0]];
 			}
 			ant[i].curCity = ant[i].nextCity;
@@ -165,7 +166,7 @@ int updatePheromones()
 			}
 			
 			pheromone[a][b]+=(QVAL)/ant[i].tourLength;
-			pheromone[b][a]+=pheromone[a][b];
+			pheromone[b][a]=pheromone[a][b];
 		}
 	}
 }
@@ -179,9 +180,8 @@ void reDeployAnts()
 		{
 			best = ant[i].tourLength;
 			bestIndex = i;
-			break;
 		}
-		if(i==n)
+		if(visit==n)
 			visit=0;
 		ant[i].curCity=visit++;
 		for(int j=0;j<n;j++)
@@ -201,10 +201,7 @@ int main(int argc, char *argv[])
 {	if (argc > 1){
 		cout << "Reading File "<< argv[1]<<endl;
 	}
-	else{
-		cout << "Usage:progname inputFileName" <<endl;
-		return 1;
-	}
+	srand(time(NULL));
 	ifstream in;
     	in.open(argv[1]);
 	in>>n;
@@ -219,11 +216,11 @@ int main(int argc, char *argv[])
 	}
 	initialize();
 	int MAX_TIME = 20 * n;
-	for(int i=0;i<MAX_TIME;i++)
+	for(int i=1;i<=MAX_TIME;i++)
 	{
 		if( tourConstruction() == 0)
 		{
-			updatePheromones();
+			updatePheromon	es();
 			
 			if(i != MAX_TIME)
 				reDeployAnts();
