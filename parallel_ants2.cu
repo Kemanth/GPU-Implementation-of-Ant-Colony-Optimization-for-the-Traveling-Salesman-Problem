@@ -36,7 +36,7 @@ float best=(double)999999;
 int bestIndex;
 float delta[MAX_CITIES][MAX_CITIES];
 
-global__void initialize(float *d_dist,float *d_pheromone,float *d_delta,int n)
+__global__ void initialize(float *d_dist,float *d_pheromone,float *d_delta,cities *d_city,int n)
 {	
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
@@ -47,25 +47,24 @@ global__void initialize(float *d_dist,float *d_pheromone,float *d_delta,int n)
 		d_delta[col + row * n] = 0.0f;
 		if(row!=col)
 		{
-			dist[col + row * n]=sqrt(powf(abs(city[row].x-city[col].x),2)+powf(abs(city[row].y-city[col].y),2));
+			d_dist[col + row * n]=sqrt(powf(abs(d_city[row].x-d_city[col].x),2)+powf(abs(d_city[row].y-d_city[col].y),2));
 			
 		}
 	}
 }
-void initTour(){
+__global__ void initTour(ants *d_ant,int n){
 	//cout << "inside init tour" << endl;
-	s = 0;
-	for(int k=0;k<MAX_ANTS;k++)
-	{
-		int j = rand() % MAX_CITIES;
-		ant[k].curCity = j;
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	if(id<n){
+		int j = id;
+		d_ant[id].curCity = j;
 		for(int i=0;i<n;i++)
 		{
-			ant[k].visited[i]=0;
+			d_ant[id].visited[i]=0;
 		}
-		ant[k].visited[j] = 1;
-		ant[k].tabu[s] = j;
-		ant[k].L = 0.0;
+		d_ant[id].visited[j] = 1;
+		d_ant[id].tabu[0] = j;
+		d_ant[id].L = 0.0;
 	}
 }
 double fitness(int i, int j)
@@ -141,7 +140,7 @@ void wrapUpTour(){
 		}
 	}
 }
-int updatePheromone(){
+void updatePheromone(){
 	//cout<<"update"<<endl;
 	for(int i =0;i<n;i++)
 	{
@@ -207,11 +206,15 @@ int main(int argc, char *argv[])
 	cudaMemcpy(d_city,city,sizeof(cities) * n,cudaMemcpyHostToDevice);
 	
 	initialize<<<gridDim, blockDim>>>(d_dist,d_pheromone,d_delta,d_city,n);
-	
+	cudaMemcpy(dist,d_dist,sizeof(float) * n * n,cudaMemcpyDeviceToHost);
+	cudaMemcpy(pheromone,d_pheromone,sizeof(float) * n * n,cudaMemcpyDeviceToHost);
+	cudaMemcpy(delta,d_delta,sizeof(float) * n * n,cudaMemcpyDeviceToHost);
 	int MAX_TIME = 20;
 	for(;;)
 	{	
-		initTour();
+		
+		initTour<<<(n-1)/32+1,32>>>(d_ant,n);
+		cudaMemcpy(ant,d_ant,sizeof(ants) * n,cudaMemcpyDeviceToHost);
 		tourConstruction();
 		wrapUpTour();
 		updatePheromone();
