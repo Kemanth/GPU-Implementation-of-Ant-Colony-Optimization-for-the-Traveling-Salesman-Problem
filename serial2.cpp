@@ -3,8 +3,8 @@
 #include<math.h>
 #include<stdlib.h>
 #include<time.h>
-#define MAX_CITIES 535 
-#define MAX_ANTS 4800
+#define MAX_CITIES 439 
+#define MAX_ANTS 439
 #define Q 100
 #define ALPHA 1.0
 #define BETA 5.0 
@@ -163,7 +163,7 @@ int updatePheromone(){
 	NC += 1;
 }
 void emptyTabu(){
-	//cout<<"emptytabu"<<endl;
+	cout<<"emptytabu"<<endl;
 	for(int k = 0;k<MAX_ANTS;k++){
 		for(int i = 0; i < MAX_CITIES;i++){
 			ant[k].tabu[i] = 0;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 		cout<<city[i].x<<" "<<city[i].y<<" "<<endl;	
 	}
 	initialize();
-	int MAX_TIME = 20;
+	int MAX_TIME = 30;
 	for(;;)
 	{   srand(time(NULL));
         initTour();
