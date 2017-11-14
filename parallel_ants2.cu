@@ -5,8 +5,8 @@
 #include<curand_kernel.h>
 #include<curand.h>
 
-#define MAX_CITIES 1002 
-#define MAX_ANTS 1002			
+#define MAX_CITIES 1002
+#define MAX_ANTS 1002		
 #define Q 100
 #define ALPHA 1.0
 #define BETA 5.0 
@@ -131,12 +131,11 @@ __device__ int selectNextCity(int k,int n,float *d_fitness,ants *d_ant,curandSta
 }
 
 __global__ void tourConstruction(ants *d_ant, float *d_dist, float *d_fitness,int n,curandState *state_d)
-{	//cout<<"tourConstruc"<<endl;
+{	//printf("tour contruction\n");
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	if(id < n){
 		for(int s=1;s<n;s++)
 		{	
-		
 			int j = selectNextCity(id, n, d_fitness,d_ant,state_d);	
 			d_ant[id].nextCity = j;
 			d_ant[id].visited[j]=1;
@@ -147,7 +146,7 @@ __global__ void tourConstruction(ants *d_ant, float *d_dist, float *d_fitness,in
 	}
 }
 void wrapUpTour(){
-	//cout<<"wrapup"<<endl;
+	//printf("wrap tour\n");
 	for(int k = 0; k < MAX_ANTS;k++){
 		ant[k].L += dist[ant[k].curCity][ant[k].tabu[0]];
 		ant[k].curCity = ant[k].tabu[0];
@@ -157,39 +156,41 @@ void wrapUpTour(){
 			bestIndex = k;
 		}
 	}
+	
 }
-void updatePheromone(){
-	//cout<<"update"<<endl;
-	for(int i =0;i<n;i++)
-	{
-		for(int j=0;j<n;j++)
-		{
-			if(i!=j)
+__global__ void updatePheromone(float *d_pheromone, float *d_delta, int n){
+
+	//printf("inside update phero\n");
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	if(id < n){
+		for(int s=0;s<n;s++){
+			if(id!=s)
 			{
-				pheromone[i][j] *=( 1.0 - RHO);
+				d_pheromone[id*n+s] *=( 1.0 - RHO);
 				
-				if(pheromone[i][j]<0.0)
+				if(d_pheromone[id*n+s]<0.0)
 				{
-					pheromone[i][j] = (1.0/n);
+					d_pheromone[id*n+s] = (1.0/n);
 				}
 			}
-			pheromone[i][j] += delta[i][j];
-			delta[i][j] = 0;
+			d_pheromone[id*n+s] += d_delta[id*n+s];
+			d_delta[id*n+s] = 0;	
 		}
 	}
-	t += MAX_ANTS;
-	NC += 1;
 }
-void emptyTabu(){
-	cout<<"emptytabu"<<endl;
-	for(int k = 0;k<MAX_ANTS;k++){
-		for(int i = 0; i < MAX_CITIES;i++){
-			ant[k].tabu[i] = 0;
-			ant[k].visited[i] = 0;
-			int first = ant[k].tabu[i];
-			int second = ant[k].tabu[(i + 1) % MAX_CITIES];
-			delta[first][second] += Q/ant[k].L;
-		}
+__global__ void emptyTabu(ants *d_ant,float *d_delta,int n){
+	
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	
+	if(id < n){
+		//printf("Empty Tabu\n");
+		for(int s=0;s<n;s++){		
+			d_ant[id].tabu[s] = 0;
+			d_ant[id].visited[s] = 0;
+			int first = d_ant[id].tabu[s];
+			int second = d_ant[id].tabu[(s + 1) % MAX_CITIES];
+			d_delta[first*n+second] += Q/d_ant[id].L;
+		}	
 	}
 }
 
@@ -239,13 +240,21 @@ int main(int argc, char *argv[])
 	for(;;)
 	{		
 		initTour<<<(n-1)/32+1,32>>>(d_ant,n);
+		cudaThreadSynchronize();
 		calcFitness<<< gridDim, blockDim>>>(d_fitness, d_dist, d_pheromone, n);
+		cudaThreadSynchronize();
 		tourConstruction<<<(n-1)/32+1,32>>>(d_ant,d_dist,d_fitness,n,state_d);
+		cudaThreadSynchronize();
 		cudaMemcpy(ant,d_ant,sizeof(ants) * n,cudaMemcpyDeviceToHost);
 		wrapUpTour();
-		updatePheromone();
+		updatePheromone<<< (n-1)/32+1,32>>>(d_pheromone,d_delta,n);
+		cudaThreadSynchronize();
+		t += MAX_ANTS;
+		NC += 1;
 		if(NC < MAX_TIME){
-			emptyTabu();
+			emptyTabu<<<(n-1)/32+1,32>>>(d_ant,d_delta,n);
+			cout<<"Best Tour so far -->  "<<best<<endl;
+			cudaThreadSynchronize();
 		}
 		else{
 			break;
