@@ -3,8 +3,8 @@
 #include<math.h>
 #include<stdlib.h>
 
-#define MAX_CITIES 48 
-#define MAX_ANTS 48			
+#define MAX_CITIES 100 
+#define MAX_ANTS 100			
 #define Q 100
 #define ALPHA 1.0
 #define BETA 5.0 
@@ -35,6 +35,7 @@ ants ant[MAX_ANTS];
 float best=(double)999999;
 int bestIndex;
 float delta[MAX_CITIES][MAX_CITIES];
+float fitness[MAX_CITIES][MAX_CITIES];
 
 __global__ void initialize(float *d_dist,float *d_pheromone,float *d_delta,cities *d_city,int n)
 {	
@@ -45,6 +46,9 @@ __global__ void initialize(float *d_dist,float *d_pheromone,float *d_delta,citie
 		d_dist[col + row * n] = 0.0f;
 		d_pheromone[col + row * n] = 1.0 / n;
 		d_delta[col + row * n] = 0.0f;
+		/*if (row == 1 && col ==1){
+			printf("d_pheromone= %f\n", d_pheromone[col + row * n]);
+		}*/
 		if(row!=col)
 		{
 			d_dist[col + row * n]=sqrt(powf(abs(d_city[row].x-d_city[col].x),2)+powf(abs(d_city[row].y-d_city[col].y),2));
@@ -67,11 +71,11 @@ __global__ void initTour(ants *d_ant,int n){
 		d_ant[id].L = 0.0;
 	}
 }
-double fitness(int i, int j)
+/*double fitness(int i, int j)
 {	//cout<<"ditness"<<endl;
 	return(( pow( pheromone[i][j], ALPHA) * pow( (1.0/ dist[i][j]), BETA)));
 }
-
+*/
 int selectNextCity(int k,int n)
 {	//cout<<"next city"<<endl;
 	int i = ant[k].curCity;
@@ -81,7 +85,7 @@ int selectNextCity(int k,int n)
 	{
 		if(ant[k].visited[j]==0)
 		{
-			prod+= fitness(i,j);
+			prod+= fitness[i][j];
 		}
 	}
 	
@@ -93,7 +97,7 @@ int selectNextCity(int k,int n)
 			j=0;
 		if(ant[k].visited[j] == 0)
 		{
-			double p = fitness(i,j)/prod;
+			double p = fitness[i][j]/prod;
 			double x = ((double)rand()/RAND_MAX); 
 			
 			if(x < p)
@@ -171,6 +175,14 @@ void emptyTabu(){
 		}
 	}
 }
+__global__ void calcFitness(float *d_fitness, float *dist, float *pheromone, int n){
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	if(row < n && col < n){
+		int id = row * n + col;
+		d_fitness[id] =  powf( pheromone[id], ALPHA) * powf( (1.0/ dist[id]), BETA);
+	}
+}
 
 int main(int argc, char *argv[])
 {	if (argc > 1){
@@ -195,12 +207,13 @@ int main(int argc, char *argv[])
 	
 	dim3 blockDim(32, 32, 1);
 	dim3 gridDim((n - 1)/ 32 + 1, (n - 1)/ 32 + 1, 1 );
-	float *d_dist,*d_pheromone,*d_delta;
+	float *d_dist,*d_pheromone,*d_delta, *d_fitness;
 	ants *d_ant;
 	cities *d_city;
 	cudaMalloc((void**)&d_pheromone, sizeof(float) * n * n);
 	cudaMalloc((void**)&d_dist, sizeof(float) * n * n);
 	cudaMalloc((void**)&d_delta, sizeof(float) * n * n);
+	cudaMalloc((void**)&d_fitness, sizeof(float) * n *n);
 	cudaMalloc((void**)&d_ant, sizeof(ants) * n);
 	cudaMalloc((void**)&d_city, sizeof(cities) * n);
 	cudaMemcpy(d_city,city,sizeof(cities) * n,cudaMemcpyHostToDevice);
@@ -215,6 +228,9 @@ int main(int argc, char *argv[])
 		
 		initTour<<<(n-1)/32+1,32>>>(d_ant,n);
 		cudaMemcpy(ant,d_ant,sizeof(ants) * n,cudaMemcpyDeviceToHost);
+		//implementing fitness as a 2D array;ds
+		calcFitness<<< gridDim, blockDim>>>(d_fitness, d_dist, d_pheromone, n);
+		cudaMemcpy(fitness, d_fitness, sizeof(float) * n * n, cudaMemcpyDeviceToHost);
 		tourConstruction();
 		wrapUpTour();
 		updatePheromone();
