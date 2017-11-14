@@ -3,9 +3,10 @@
 #include<math.h>
 #include<stdlib.h>
 #include<curand_kernel.h>
+#include<curand.h>
 
-#define MAX_CITIES 48 
-#define MAX_ANTS 48			
+#define MAX_CITIES 1002 
+#define MAX_ANTS 1002			
 #define Q 100
 #define ALPHA 1.0
 #define BETA 5.0 
@@ -57,10 +58,18 @@ __global__ void initialize(float *d_dist,float *d_pheromone,float *d_delta,citie
 	}
 }
 
-__global__ void setup_curand_states(curandState *state_d, unsigned long t){
+__global__ void setup_curand_states(curandState *state_d,int t){
 	
 	int id = threadIdx.x + blockIdx.x*blockDim.x;
 	curand_init(t, id, 0, &state_d[id]);
+}
+
+__device__ float generate(curandState* globalState, int ind){
+    //int ind = threadIdx.x;
+    curandState localState = globalState[ind];
+    float RANDOM = curand_uniform( &localState );
+    globalState[ind] = localState;
+    return RANDOM;
 }
 
 __global__ void initTour(ants *d_ant,int n){
@@ -108,8 +117,8 @@ __device__ int selectNextCity(int k,int n,float *d_fitness,ants *d_ant,curandSta
 			j=0;
 		if(d_ant[k].visited[j] == 0)
 		{
-			double p = d_fitness[i*n+j]/prod;
-			double x = ((double)(curand(&state_d[k])% 1000000000000000000)/1000000000000000000); 
+			float p = d_fitness[i*n+j]/prod;
+			float x = (float)generate(state_d,i); 
 			
 			if(x < p)
 			{
@@ -219,9 +228,9 @@ int main(int argc, char *argv[])
 	cudaMalloc((void**)&d_fitness, sizeof(float) * n *n);
 	cudaMalloc( (void**) &state_d, sizeof(state));
 	cudaMemcpy(d_city,city,sizeof(cities) * n,cudaMemcpyHostToDevice);
-	time_t t; 
-	time(&t);
-	setup_curand_states <<< (n-1)/32+1,32 >>> (state_d, (unsigned long) t);
+	srand(time(0)); 
+	int seed = rand();
+	setup_curand_states <<< (n-1)/32+1,32 >>> (state_d,seed);
 	initialize<<<gridDim, blockDim>>>(d_dist,d_pheromone,d_delta,d_city,n);
 	cudaMemcpy(dist,d_dist,sizeof(float) * n * n,cudaMemcpyDeviceToHost);
 	cudaMemcpy(pheromone,d_pheromone,sizeof(float) * n * n,cudaMemcpyDeviceToHost);
