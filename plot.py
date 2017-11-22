@@ -1,40 +1,31 @@
 
-# coding: utf-8
-
-# In[1]:
-
-
 from matplotlib import pyplot as plt
-
-
-# In[3]:
-
 
 import pickle
 
 
-# In[4]:
 
-
-with open('example.in', 'rb') as inp:
-    xLabel = pickle.load(inp)
+with open('serialData.txt', 'rb') as inp:
+    
     a = pickle.load(inp)
     exec_time = pickle.load(inp)
+    xLabel = pickle.load(inp)
 
 
 # In[30]:
 
 
-with open('example2.in', 'rb') as inp:
-    xLabel1 = pickle.load(inp)
-    a1 = pickle.load(inp)
-    exec_time1 = pickle.load(inp)
+with open('parallelData.txt', 'rb') as inp1:
+    
+    a1 = pickle.load(inp1)
+    exec_time1 = pickle.load(inp1)
+    xLabel1 = pickle.load(inp1)
 
 
 # In[44]:
 
 
-get_ipython().magic('matplotlib inline')
+#get_ipython().magic('matplotlib inline')
 plt.title('Parallel vs Serial execution comparison')
 plt.xlabel('Cities', color = 'blue')
 plt.ylabel('execution time', color = 'blue')
