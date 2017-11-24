@@ -27,13 +27,13 @@ a1 = [log10(x) for x in a1]
 
 # In[44]:
 
-##fig = plt.figure()
-##ax = fig.add_subplot(111)
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
 #get_ipython().magic('matplotlib inline')
 plt.title('Parallel vs Serial execution comparison')
 plt.xlabel('log of number of Cities', color = 'blue')
-plt.ylabel('execution time', color = 'blue')
+plt.ylabel('execution time in minutes', color = 'blue')
 
 plt.plot(a, exec_time, 'ro')
 plt.plot(a, exec_time, label = 'serial', color = 'red')
@@ -45,8 +45,8 @@ ex = [int(x) for x in exec_time]
 #plt.yticks(exec_time, ex, fontsize = 4)
 
 # In[34]:
-##for a, b in zip(a, exec_time):
-##    ax.annotate(str(int(b)), xy = (a, b))
+for a, b in zip(a, exec_time):
+    ax.annotate(str(int(b)), xy = (a, b))
 
 plt.show()
 
